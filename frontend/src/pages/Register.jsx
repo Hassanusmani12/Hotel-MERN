@@ -5,7 +5,6 @@ import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 import { FaUserPlus, FaCrown, FaUser, FaEnvelope, FaLock, FaPhone } from 'react-icons/fa';
 import API_BASE_URL from '../config';
-import { useGoogleLogin } from '@react-oauth/google';
 
 const staggerVariants = {
   hidden: { opacity: 0 },
@@ -23,25 +22,6 @@ const Register = () => {
     const navigate = useNavigate();
 
     const onChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-
-    const googleLogin = useGoogleLogin({
-        onSuccess: async (credentialResponse) => {
-            try {
-                const res = await axios.post(`${API_BASE_URL}/api/users/google`, {
-                    credential: credentialResponse.credential
-                });
-                const { token, ...userData } = res.data;
-                login(userData, token);
-                toast.success(`Welcome, ${userData.name}!`);
-                setTimeout(() => navigate('/'), 1000);
-            } catch (error) {
-                toast.error(error.response?.data?.message || "Google registration failed");
-            }
-        },
-        onError: () => {
-            toast.error("Google registration failed");
-        }
-    });
 
     const onSubmit = async (e) => {
         e.preventDefault();
@@ -219,7 +199,7 @@ const Register = () => {
 
                     <motion.button
                         type="button"
-                        onClick={() => googleLogin()}
+                        onClick={() => alert("Google login coming soon")}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         style={{

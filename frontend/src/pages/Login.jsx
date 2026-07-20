@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 import { FaEnvelope, FaLock, FaSignInAlt, FaCrown } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import API_BASE_URL from '../config';
-import { useGoogleLogin } from '@react-oauth/google';
 
 const staggerVariants = {
   hidden: { opacity: 0 },
@@ -26,28 +25,6 @@ const Login = () => {
 
     const onChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-    const googleLogin = useGoogleLogin({
-        onSuccess: async (credentialResponse) => {
-            try {
-                const res = await axios.post(`${API_BASE_URL}/api/users/google`, {
-                    credential: credentialResponse.credential
-                });
-                const { token, ...userData } = res.data;
-                login(userData, token);
-                toast.success(`Welcome back, ${userData.name}!`);
-                setTimeout(() => {
-                    if (userData.role === 'admin') navigate('/admin');
-                    else navigate('/');
-                }, 1000);
-            } catch (error) {
-                toast.error(error.response?.data?.message || "Google login failed");
-            }
-        },
-        onError: () => {
-            toast.error("Google login failed");
-        }
-    });
-
     const onSubmit = async (e) => {
         e.preventDefault();
         if (!formData.email || !formData.password) return toast.error("Please enter email & password");
@@ -65,7 +42,8 @@ const Login = () => {
                 else navigate('/');
             }, 1000);
         } catch (error) {
-            toast.error(error.response?.data?.message || "Invalid Credentials");
+            const message = error?.response?.data?.message || error?.message || "Invalid Credentials";
+            toast.error(message);
         } finally {
             setLoading(false);
         }
@@ -223,7 +201,7 @@ const Login = () => {
 
                     <motion.button
                         type="button"
-                        onClick={() => googleLogin()}
+                        onClick={() => alert("Google login coming soon")}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         style={{
