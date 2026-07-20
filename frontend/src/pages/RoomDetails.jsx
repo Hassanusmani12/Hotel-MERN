@@ -104,8 +104,8 @@ const RoomDetails = () => {
         toast.success("Review Submitted!");
     };
 
-    const nextSlide = () => setCurrentImgIndex((prev) => (prev === (room?.images.length - 1) ? 0 : prev + 1));
-    const prevSlide = () => setCurrentImgIndex((prev) => (prev === 0 ? (room?.images.length - 1) : prev - 1));
+    const nextSlide = () => setCurrentImgIndex((prev) => (prev === (room?.images?.length - 1) ? 0 : prev + 1));
+    const prevSlide = () => setCurrentImgIndex((prev) => (prev === 0 ? (room?.images?.length - 1) : prev - 1));
 
     if (loading) return <div className="luxury-bg-mesh" style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-color)' }}>Loading...</div>;
     if (!room) return null;
@@ -141,7 +141,7 @@ const RoomDetails = () => {
 
                     <motion.div variants={fadeUp} style={{ position: 'relative', height: '500px', borderRadius: '20px', overflow: 'hidden', marginBottom: '16px', border: '1px solid var(--border)', background: '#000' }}>
                         <AnimatePresence mode='wait'>
-                            <motion.img key={currentImgIndex} src={room.images[currentImgIndex]}
+                            <motion.img key={currentImgIndex} src={room?.images?.[currentImgIndex] || "https://placehold.co/400x300?text=No+Image"}
                                 initial={{ opacity: 0, scale: 1.05 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.5 }}
                                 alt="Room" style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                 onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/400x300"; }}
@@ -152,7 +152,7 @@ const RoomDetails = () => {
                     </motion.div>
 
                     <motion.div variants={fadeUp} style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '10px', marginBottom: '40px' }}>
-                        {room.images.map((img, idx) => (
+                        {(room.images || []).map((img, idx) => (
                             <motion.img key={idx} src={img} onClick={() => setCurrentImgIndex(idx)}
                                 whileHover={{ scale: 1.05, y: -4 }}
                                 style={{ width: '100px', height: '70px', objectFit: 'cover', borderRadius: '12px', cursor: 'pointer', border: currentImgIndex === idx ? '2px solid var(--primary)' : '2px solid transparent', opacity: currentImgIndex === idx ? 1 : 0.5, transition: 'all 0.3s' }}

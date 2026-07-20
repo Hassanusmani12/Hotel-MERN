@@ -30,8 +30,11 @@ export const sendMessage = async (message) => {
     }
 
     const data = await response.json();
-    console.log('[AI Service] Response received:', data.reply.substring(0, 200));
-    return data.reply;
+    const text = data?.reply || data?.message || "";
+    if (typeof text === 'string' && text.length > 0) {
+      console.log('[AI Service] Response received:', text.substring(0, 200));
+    }
+    return text;
   } catch (error) {
     console.error('[AI Service] Message error:', error);
     throw error;

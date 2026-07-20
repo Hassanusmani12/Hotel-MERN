@@ -320,7 +320,7 @@ const FloatingAIAssistant = () => {
                           color: 'inherit',
                         }}
                       >
-                        {msg.text}
+                        {msg.text || ''}
                       </ReactMarkdown>
                     </motion.div>
                   ))}

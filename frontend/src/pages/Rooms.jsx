@@ -579,7 +579,7 @@ const CompareDrawer = ({ compareList, removeCompare, clearCompare }) => (
             <div style={{ display: 'flex', gap: '20px' }}>
                 {compareList.map(item => (
                     <div key={item._id} style={{ display: 'flex', alignItems: 'center', gap: '15px', background: '#111114', padding: '10px 20px', borderRadius: '15px', border: '1px solid #333' }}>
-                        <img src={item.images[0]} style={{ width: '50px', height: '50px', borderRadius: '10px', objectFit: 'cover' }} alt="thumb" onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/400x300"; }} />
+                        <img src={item.images?.[0] || "https://placehold.co/400x300?text=No+Image"} style={{ width: '50px', height: '50px', borderRadius: '10px', objectFit: 'cover' }} alt="thumb" onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/400x300"; }} />
                         <div>
                             <h4 style={{ margin: 0, fontSize: '14px' }}>{item.type}</h4>
                             <p style={{ margin: 0, fontSize: '12px', color: 'var(--primary)' }}>${item.price}</p>
