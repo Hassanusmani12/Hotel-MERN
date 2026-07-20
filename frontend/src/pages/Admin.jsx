@@ -497,9 +497,9 @@ const Admin = () => {
                             {rooms.map(room => (
                                 <motion.div whileHover={{ y: -5 }} key={room._id} className="glass-card" style={{ padding: '25px', background: '#111114', border: '1px solid #1f1f23', borderRadius: '25px' }}>
                                     <div style={{ position: 'relative', borderRadius: '20px', overflow: 'hidden', height: '200px' }}>
-                                        <img src={room.images?.[0] || room.image} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="suite" onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/400x300"; }} />
+                                        <img src={room.images?.[0] || room.image || "https://placehold.co/400x300?text=No+Image"} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="suite" onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/400x300"; }} />
                                         <div style={{ position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(0,0,0,0.7)', color: '#fff', padding: '5px 10px', borderRadius: '20px', fontSize: '10px' }}>
-                                            <FaCamera /> {room.images?.length || 1} Photos
+                                            <FaCamera /> {(room.images?.length || 0)} Photos
                                         </div>
                                     </div>
                                     <div style={{ marginTop: '15px' }}><h3 style={{ margin: 0 }}>{room.type}</h3><p style={{ margin: '5px 0', color: 'var(--primary)' }}>${room.price}</p><StatusBadge status={room.status} /></div>

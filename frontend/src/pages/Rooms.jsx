@@ -395,15 +395,16 @@ const TiltCard = ({ children, className, onClick, style }) => {
  */
 const CardImageSlider = ({ images }) => {
     const [index, setIndex] = useState(0);
+    const safeImages = Array.isArray(images) && images.length > 0 ? images : ["https://placehold.co/400x300?text=No+Image"];
 
     const nextImage = (e) => {
         e.stopPropagation();
-        setIndex((prev) => (prev + 1) % images.length);
+        setIndex((prev) => (prev + 1) % safeImages.length);
     };
 
     const prevImage = (e) => {
         e.stopPropagation();
-        setIndex((prev) => (prev - 1 + images.length) % images.length);
+        setIndex((prev) => (prev - 1 + safeImages.length) % safeImages.length);
     };
 
     return (
@@ -413,7 +414,7 @@ const CardImageSlider = ({ images }) => {
                 initial={{ opacity: 0, scale: 1.1 }} 
                 animate={{ opacity: 1, scale: 1 }} 
                 transition={{ duration: 0.5 }}
-                src={images[index]} 
+                src={safeImages[index]} 
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
             />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 40%)' }}></div>
@@ -424,7 +425,7 @@ const CardImageSlider = ({ images }) => {
             </div>
             
             <div style={{ position: 'absolute', bottom: '15px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '5px' }}>
-                {images.map((_, i) => (
+                {safeImages.map((_, i) => (
                     <Motion.div 
                         key={i} 
                         initial={false}
