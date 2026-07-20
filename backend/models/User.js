@@ -14,6 +14,11 @@ const userSchema = mongoose.Schema({
         type: String,
         required: [true, 'Please add a password']
     },
+    googleId: {
+        type: String,
+        sparse: true,
+        default: null
+    },
     // ✅ FIX: Phone ko required: false kar diya (Optional)
     phone: {
         type: String,

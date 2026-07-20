@@ -1,23 +1,30 @@
 const User = require('../models/User');
+const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+const signToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+        expiresIn: '30d'
+    });
+};
 
 // --- Register User ---
 const registerUser = async (req, res) => {
     try {
         const { name, email, password, phone, secretKey } = req.body;
         
-        // 1. Check if user already exists
         const userExists = await User.findOne({ email });
         if (userExists) {
             return res.status(400).json({ message: 'User with this email already exists' });
         }
 
-        // 2. Assign Role
         let role = 'guest'; 
         if (secretKey === 'admin125') {
             role = 'admin';
         }
 
-        // 3. Create User
         const user = await User.create({
             name, 
             email, 
@@ -26,15 +33,16 @@ const registerUser = async (req, res) => {
             role: role 
         });
 
-        if (user) {
-            res.status(201).json({
-                _id: user.id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                message: `Account Created! Role: ${role.toUpperCase()}`
-            });
-        }
+        const token = signToken(user._id);
+
+        res.status(201).json({
+            _id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            token,
+            message: `Account Created! Role: ${role.toUpperCase()}`
+        });
     } catch (error) {
         console.error("Registration Error:", error);
         res.status(500).json({ message: error.message });
@@ -48,6 +56,7 @@ const loginUser = async (req, res) => {
         const user = await User.findOne({ email });
 
         if (user && user.password === password) { 
+            const token = signToken(user.id);
             res.json({
                 _id: user.id,
                 name: user.name,
@@ -55,6 +64,7 @@ const loginUser = async (req, res) => {
                 role: user.role,
                 phone: user.phone || "",
                 address: user.address || "",
+                token,
                 message: "Login Successful!"
             });
         } else {
@@ -62,6 +72,56 @@ const loginUser = async (req, res) => {
         }
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+};
+
+// --- Google Login / Register ---
+const googleLogin = async (req, res) => {
+    try {
+        const { credential } = req.body;
+
+        if (!credential) {
+            return res.status(400).json({ message: 'Google credential is required' });
+        }
+
+        const ticket = await client.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+
+        const payload = ticket.getPayload();
+        const { email, name, picture, sub: googleId } = payload;
+
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            user = await User.create({
+                name: name || 'Google User',
+                email,
+                googleId,
+                password: googleId,
+                role: 'guest'
+            });
+        } else if (!user.googleId) {
+            user.googleId = googleId;
+            await user.save();
+        }
+
+        const token = signToken(user._id);
+
+        res.json({
+            _id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            phone: user.phone || "",
+            address: user.address || "",
+            token,
+            message: user.googleId ? 'Google Login Successful!' : 'Account linked with Google!'
+        });
+    } catch (error) {
+        console.error("Google Login Error:", error);
+        res.status(401).json({ message: 'Invalid Google token' });
     }
 };
 
@@ -76,8 +136,6 @@ const updateUserProfile = async (req, res) => {
             user.phone = req.body.phone || user.phone;
             user.address = req.body.address || user.address;
 
-            // Note: Password update logic moved to separate secure function
-            
             const updatedUser = await user.save();
 
             res.json({
@@ -108,13 +166,10 @@ const changePassword = async (req, res) => {
             return res.status(404).json({ success: false, message: "User not found" });
         }
 
-        // Direct comparison (since we aren't using bcrypt yet based on your login logic)
-        // If you add bcrypt later, change this to: await bcrypt.compare(oldPassword, user.password)
         if (user.password !== oldPassword) {
             return res.status(400).json({ success: false, message: "Incorrect current password" });
         }
 
-        // Update Password
         user.password = newPassword;
         await user.save();
 
@@ -125,5 +180,4 @@ const changePassword = async (req, res) => {
     }
 };
 
-// ✅ IMPORTANT: Export ALL functions
-module.exports = { registerUser, loginUser, updateUserProfile, changePassword };
+module.exports = { registerUser, loginUser, updateUserProfile, changePassword, googleLogin };

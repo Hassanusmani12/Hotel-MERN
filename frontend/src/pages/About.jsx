@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { motion } from 'framer-motion';
 import axios from 'axios';
+import API_BASE_URL from '../config';
 
 const fadeUp = {
     hidden: { opacity: 0, y: 40 },
@@ -22,12 +23,12 @@ const About = () => {
     const [avgRating, setAvgRating] = useState(null);
 
     useEffect(() => {
-        axios.get('http://localhost:5000/api/rooms')
+        axios.get(`${API_BASE_URL}/api/rooms`)
             .then(res => {
                 setRoomCount(res.data.length);
             })
             .catch(() => setRoomCount('No data'));
-        axios.get('http://localhost:5000/api/bookings')
+        axios.get(`${API_BASE_URL}/api/bookings`)
             .then(res => {
                 const uniqueGuests = new Set(res.data.map(b => b.user?._id).filter(Boolean));
                 setGuestCount(uniqueGuests.size);

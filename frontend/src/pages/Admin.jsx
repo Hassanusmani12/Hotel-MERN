@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
+import API_BASE_URL from '../config';
 import { 
     FaTrash, FaCalendarCheck, FaEnvelopeOpenText, FaDollarSign, 
     FaEdit, FaHotel, FaPlus, FaSignOutAlt, FaBars, FaTimes, 
@@ -224,10 +225,10 @@ const Admin = () => {
         setLoading(true);
         try {
             const results = await Promise.allSettled([
-                axios.get('http://localhost:5000/api/bookings'),
-                axios.get('http://localhost:5000/api/messages'),
-                axios.get('http://localhost:5000/api/rooms'),
-                axios.get('http://localhost:5000/api/amenities')
+                axios.get(`${API_BASE_URL}/api/bookings`),
+                axios.get(`${API_BASE_URL}/api/messages`),
+                axios.get(`${API_BASE_URL}/api/rooms`),
+                axios.get(`${API_BASE_URL}/api/amenities`)
             ]);
 
             if (results[0].status === 'fulfilled') setBookings(results[0].value.data || []);
@@ -272,7 +273,7 @@ const Admin = () => {
             }
 
             // Assuming standard API routes
-            await axios.delete(`http://localhost:5000/api/${type}s/${id}`);
+            await axios.delete(`${API_BASE_URL}/api/${type}s/${id}`);
             toast.success("Record purged from database.");
             fetchData();
         } catch (err) { 
@@ -289,10 +290,10 @@ const Admin = () => {
             const payload = { ...formData, images, amenities: formData.amenities };
 
             if (editingId) {
-                await axios.put(`http://localhost:5000/api/rooms/${editingId}`, payload);
+                await axios.put(`${API_BASE_URL}/api/rooms/${editingId}`, payload);
                 toast.success("Suite architecture updated.");
             } else {
-                await axios.post('http://localhost:5000/api/rooms', payload);
+                await axios.post(`${API_BASE_URL}/api/rooms`, payload);
                 toast.success("New suite commissioned.");
             }
             resetRoomForm();

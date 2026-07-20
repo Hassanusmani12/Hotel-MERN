@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
+import API_BASE_URL from '../config';
 import {
     FaArrowLeft, FaLock, FaCreditCard, FaUser, FaEnvelope,
     FaCalendarCheck, FaCalendarTimes, FaCrown, FaShieldAlt
@@ -80,7 +81,7 @@ const Payment = () => {
         try {
             const isCash = paymentMethod === 'cash';
             const calculatedTotal = displayTotal || (room?.price || 0);
-            await axios.post('http://localhost:5000/api/bookings', {
+            await axios.post(`${API_BASE_URL}/api/bookings`, {
                 roomId: room?._id,
                 userId: bookingData?.userId || user?._id,
                 checkInDate: bookingData?.checkIn,

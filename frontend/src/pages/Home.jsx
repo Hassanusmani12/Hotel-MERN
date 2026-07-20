@@ -14,6 +14,7 @@ import {
     FaWifi,
 } from 'react-icons/fa';
 import axios from 'axios';
+import API_BASE_URL from '../config';
 
 const WHY_STAYS = [
     {
@@ -284,7 +285,7 @@ const Home = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        axios.get('http://localhost:5000/api/rooms')
+        axios.get(`${API_BASE_URL}/api/rooms`)
             .then(res => {
                 const data = res.data;
                 setRooms(data);

@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import useRequireAuth from '../hooks/useRequireAuth';
+import API_BASE_URL from '../config';
 import {
     FaArrowLeft, FaBed, FaShower, 
     FaStar, FaShareAlt, FaHeart, FaRegHeart, FaChevronLeft, FaChevronRight, FaCrown
@@ -65,7 +66,7 @@ const RoomDetails = () => {
         window.scrollTo(0, 0);
         const fetchRoom = async () => {
             try {
-                const res = await axios.get(`http://localhost:5000/api/rooms/${id}`);
+                const res = await axios.get(`${API_BASE_URL}/api/rooms/${id}`);
                 setRoom(res.data);
             } catch {
                 toast.error("Room not found");

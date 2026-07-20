@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { motion as Motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import * as THREE from 'three';
+import API_BASE_URL from '../config';
 import { 
     // Navigation & Actions
     FaSearch, FaArrowRight, FaArrowLeft, FaChevronLeft, FaChevronRight, FaTimes, FaExchangeAlt, FaFilter, FaSortAmountDown,
@@ -630,7 +631,7 @@ const Rooms = () => {
         
         const fetchRooms = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/api/rooms');
+                const res = await axios.get(`${API_BASE_URL}/api/rooms`);
                 setRooms(res.data || []);
             } catch (error) {
                 console.warn("API Error", error);

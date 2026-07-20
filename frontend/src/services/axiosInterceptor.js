@@ -1,4 +1,5 @@
 import axios from 'axios';
+import API_BASE_URL from '../config';
 
 // Store the logout callback to avoid circular dependencies
 let logoutCallback = null;
@@ -9,7 +10,7 @@ export const setLogoutCallback = (callback) => {
 
 // Create axios instance
 export const axiosInstance = axios.create({
-  baseURL: 'http://localhost:5000',
+  baseURL: API_BASE_URL,
 });
 
 /**

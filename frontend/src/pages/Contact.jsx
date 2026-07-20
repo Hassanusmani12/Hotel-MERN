@@ -3,6 +3,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
+import API_BASE_URL from '../config';
 import { 
     FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaPaperPlane, 
     FaClock, FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn, 
@@ -308,7 +309,7 @@ const Contact = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            await axios.post('http://localhost:5000/api/messages', formData);
+            await axios.post(`${API_BASE_URL}/api/messages`, formData);
             toast.success("📨 Transmission Secured! Concierge will reach out.");
             setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
         } catch (error) {

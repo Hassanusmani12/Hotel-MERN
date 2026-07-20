@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
+import API_BASE_URL from '../config';
 import { 
     FaUser, FaSignOutAlt, FaCalendarCheck, FaCog, FaCreditCard, 
     FaHistory, FaCamera, FaLock, FaBell, FaCheckCircle, FaConciergeBell, FaPlus, FaTrash, FaShieldAlt, FaKey
@@ -125,7 +126,7 @@ const Profile = () => {
 
     const fetchBookings = async (userId) => {
         try {
-            const res = await axios.get(`http://localhost:5000/api/bookings/${userId}`);
+            const res = await axios.get(`${API_BASE_URL}/api/bookings/${userId}`);
             setBookings(res.data);
         } catch (error) {
             console.error("Fetch error", error);
@@ -137,7 +138,7 @@ const Profile = () => {
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
         try {
-            await axios.put('http://localhost:5000/api/users/profile', { userId: user._id, ...editData });
+            await axios.put(`${API_BASE_URL}/api/users/profile`, { userId: user._id, ...editData });
             const updatedUser = { ...user, ...editData };
             localStorage.setItem('user', JSON.stringify(updatedUser));
             setUser(updatedUser);
@@ -166,7 +167,7 @@ const Profile = () => {
                if (!isMatch) return res.status(400).json({ message: "Incorrect current password" });
             */
 
-            const res = await axios.put('http://localhost:5000/api/users/change-password', {
+            const res = await axios.put(`${API_BASE_URL}/api/users/change-password`, {
                 userId: user._id,
                 oldPassword: passData.current, // ✅ Sending Old Password
                 newPassword: passData.new

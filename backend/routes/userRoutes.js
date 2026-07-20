@@ -4,7 +4,8 @@ const {
     registerUser, 
     loginUser, 
     updateUserProfile, 
-    changePassword 
+    changePassword,
+    googleLogin 
 } = require('../controllers/userController');
 
 // Middleware import
@@ -12,7 +13,8 @@ const { protect } = require('../middleware/authMiddleware');
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
+router.post('/google', googleLogin);
 router.put('/profile', protect, updateUserProfile);
-router.put('/change-password', protect, changePassword); // ✅ Yeh route hona zaroori hai
+router.put('/change-password', protect, changePassword);
 
 module.exports = router;

@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
+import { API_BASE_URL } from '../config';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = `${API_BASE_URL}/api`;
 
 // Generate a unique session ID for this chat session
 const SESSION_ID = uuidv4();

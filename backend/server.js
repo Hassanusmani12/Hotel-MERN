@@ -13,7 +13,22 @@ const chatRoutes = require('./routes/chatRoutes');
 const app = express();
 
 app.use(express.json()); 
-app.use(cors());
+
+const allowedOrigins = [
+    'https://hotel-mern-kappa.vercel.app',
+    'http://localhost:5173'
+];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true
+}));
 
 // ✅ FIX: Use 127.0.0.1 instead of localhost (Crucial for Login)
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/mern'; 
