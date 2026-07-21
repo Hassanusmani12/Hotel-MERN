@@ -77,7 +77,8 @@ export const getWelcomeMessage = async () => {
     msg += ` We currently have ${available.length} rooms available from $${minPrice} to $${maxPrice}/night.`;
   }
   if (topRoom) {
-    msg += ` Our highest-rated room is the ${topRoom.type} (\u2605 ${topRoom.rating}).`;
+    const rating = topRoom?.rating ?? '5.0';
+    msg += ` Our highest-rated room is the ${topRoom.type} (\u2605 ${rating}).`;
   }
   msg += ` How may I assist you today?`;
   return msg;
