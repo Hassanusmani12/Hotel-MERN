@@ -110,10 +110,14 @@ const loginUser = async (req, res) => {
 // --- Google Login / Register ---
 const googleLogin = async (req, res) => {
     try {
-        const { credential } = req.body;
+        const { credential, action } = req.body;
 
         if (!credential) {
             return res.status(400).json({ message: 'Google credential is required' });
+        }
+
+        if (!action || !['login', 'register'].includes(action)) {
+            return res.status(400).json({ message: 'Action must be "login" or "register"' });
         }
 
         const ticket = await client.verifyIdToken({
@@ -122,21 +126,33 @@ const googleLogin = async (req, res) => {
         });
 
         const payload = ticket.getPayload();
-        const { email, name, picture, sub: googleId } = payload;
+        const { email, name, sub: googleId } = payload;
 
         let user = await User.findOne({ email });
 
-        if (!user) {
-            user = await User.create({
-                name: name || 'Google User',
-                email,
-                googleId,
-                password: googleId,
-                role: 'guest'
-            });
-        } else if (!user.googleId) {
-            user.googleId = googleId;
-            await user.save();
+        if (action === 'login') {
+            if (!user) {
+                return res.status(400).json({ message: 'Account not found. Please sign up first.' });
+            }
+            if (!user.googleId) {
+                user.googleId = googleId;
+                await user.save();
+            }
+        }
+
+        if (action === 'register') {
+            if (!user) {
+                user = await User.create({
+                    name: name || 'Google User',
+                    email,
+                    googleId,
+                    password: googleId,
+                    role: 'guest'
+                });
+            } else if (!user.googleId) {
+                user.googleId = googleId;
+                await user.save();
+            }
         }
 
         const token = signToken(user._id);
@@ -149,7 +165,7 @@ const googleLogin = async (req, res) => {
             phone: user.phone || "",
             address: user.address || "",
             token,
-            message: user.googleId ? 'Google Login Successful!' : 'Account linked with Google!'
+            message: 'Google authentication successful!'
         });
     } catch (error) {
         console.error("Google Login Error:", error);
