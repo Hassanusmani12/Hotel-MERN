@@ -110,23 +110,39 @@ const loginUser = async (req, res) => {
 // --- Google Login / Register ---
 const googleLogin = async (req, res) => {
     try {
-        const { credential, action } = req.body;
+        const { credential, access_token, action } = req.body;
 
-        if (!credential) {
-            return res.status(400).json({ message: 'Google credential is required' });
+        if (!credential && !access_token) {
+            return res.status(400).json({ message: 'Google credential or access_token is required' });
         }
 
         if (!action || !['login', 'register'].includes(action)) {
             return res.status(400).json({ message: 'Action must be "login" or "register"' });
         }
 
-        const ticket = await client.verifyIdToken({
-            idToken: credential,
-            audience: process.env.GOOGLE_CLIENT_ID,
-        });
+        let email, name, googleId;
 
-        const payload = ticket.getPayload();
-        const { email, name, sub: googleId } = payload;
+        if (credential) {
+            const ticket = await client.verifyIdToken({
+                idToken: credential,
+                audience: process.env.GOOGLE_CLIENT_ID,
+            });
+            const payload = ticket.getPayload();
+            email = payload.email;
+            name = payload.name;
+            googleId = payload.sub;
+        } else {
+            const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${access_token}` },
+            });
+            if (!response.ok) {
+                return res.status(401).json({ message: 'Invalid Google access token' });
+            }
+            const data = await response.json();
+            email = data.email;
+            name = data.name;
+            googleId = data.sub;
+        }
 
         let user = await User.findOne({ email });
 
