@@ -124,9 +124,35 @@ const Profile = () => {
         }
     }, [navigate]);
 
+    useEffect(() => {
+        const storedUser = JSON.parse(localStorage.getItem('user'));
+        if (!storedUser) return;
+
+        const silentRefresh = async () => {
+            try {
+                const res = await axios.get(`${API_BASE_URL}/api/bookings/${storedUser._id}?_=${Date.now()}`);
+                setBookings(res.data);
+            } catch (_) {}
+        };
+
+        const onFocus = () => silentRefresh();
+        const onVisible = () => { if (document.visibilityState === 'visible') silentRefresh(); };
+
+        window.addEventListener('focus', onFocus);
+        document.addEventListener('visibilitychange', onVisible);
+
+        const pollId = setInterval(silentRefresh, 10000);
+
+        return () => {
+            window.removeEventListener('focus', onFocus);
+            document.removeEventListener('visibilitychange', onVisible);
+            clearInterval(pollId);
+        };
+    }, []);
+
     const fetchBookings = async (userId) => {
         try {
-            const res = await axios.get(`${API_BASE_URL}/api/bookings/${userId}`);
+            const res = await axios.get(`${API_BASE_URL}/api/bookings/${userId}?_=${Date.now()}`);
             setBookings(res.data);
         } catch (error) {
             console.error("Fetch error", error);
@@ -194,10 +220,15 @@ const Profile = () => {
         }
     };
 
-    const handleCancelBooking = (id) => {
-        if(window.confirm("Are you sure you want to cancel this reservation?")) {
+    const handleCancelBooking = async (id) => {
+        if (!window.confirm("Are you sure you want to cancel this reservation?")) return;
+        try {
+            await axios.put(`${API_BASE_URL}/api/bookings/${id}/cancel`);
             setBookings(bookings.filter(b => b._id !== id));
-            toast.info("Reservation Cancelled.");
+            toast.success("Reservation Cancelled.");
+        } catch (error) {
+            const msg = error?.response?.data?.message || "Failed to cancel booking.";
+            toast.error(msg);
         }
     };
 
@@ -323,10 +354,23 @@ const Profile = () => {
                                                 </div>
                                                 <div style={{ textAlign: 'right', minWidth: '150px' }}>
                                                     <p style={{ margin: 0, fontWeight: 'bold', fontSize: '1.4rem', color: 'var(--primary)', fontFamily: 'Playfair Display' }}>${booking.room?.price}</p>
-                                                    <p style={{ fontSize: '13px', opacity: 0.6, marginTop: '5px' }}>{new Date(booking.checkInDate).toLocaleDateString()} - {new Date(booking.checkOutDate).toLocaleDateString()}</p>
-                                                    {booking.status === 'Confirmed' && (
-                                                        <button onClick={() => handleCancelBooking(booking._id)} style={{ marginTop: '15px', background: 'none', border: 'none', color: '#ff4d4d', fontSize: '13px', cursor: 'pointer', textDecoration: 'underline', opacity: 0.8 }}>Cancel Reservation</button>
-                                                    )}
+                                                    <p style={{ fontSize: '13px', opacity: 0.6, marginTop: '5px' }}>
+                                                        {(() => {
+                                                            const fmt = (d) => {
+                                                                if (!d) return 'N/A';
+                                                                const p = String(d).split('T')[0];
+                                                                const [y, m, day] = p.split('-');
+                                                                return y ? `${parseInt(m)}/${parseInt(day)}/${y}` : d;
+                                                            };
+                                                            return `${fmt(booking.checkInDate)} - ${fmt(booking.checkOutDate)}`;
+                                                        })()}
+                                                    </p>
+                                                    {booking.status === 'Confirmed' && (() => {
+                                                        const isCancellable = (Date.now() - new Date(booking.createdAt).getTime()) <= (24 * 60 * 60 * 1000);
+                                                        return isCancellable
+                                                            ? <button onClick={() => handleCancelBooking(booking._id)} style={{ marginTop: '15px', background: 'none', border: 'none', color: '#ff4d4d', fontSize: '13px', cursor: 'pointer', textDecoration: 'underline', opacity: 0.8 }}>Cancel Reservation</button>
+                                                            : <span style={{ marginTop: '15px', display: 'inline-block', padding: '6px 14px', borderRadius: '20px', background: 'rgba(108,117,125,0.15)', color: '#6c757d', fontSize: '11px', fontWeight: '700', letterSpacing: '1px' }}>Cancellation Expired</span>;
+                                                    })()}
                                                 </div>
                                             </div>
                                         ))}

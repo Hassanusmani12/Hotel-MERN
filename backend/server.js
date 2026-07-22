@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
 const userRoutes = require('./routes/userRoutes');
@@ -9,6 +10,7 @@ const bookingRoutes = require('./routes/bookingRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const amenityRoutes = require('./routes/amenityRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const User = require('./models/User');
 
 const app = express();
 
@@ -34,7 +36,32 @@ app.use(cors({
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/mern'; 
 
 mongoose.connect(MONGO_URI)
-  .then(() => console.log("✅ MongoDB Connected Successfully!"))
+  .then(async () => {
+    console.log("✅ MongoDB Connected Successfully!");
+
+    try {
+      const adminEmail = 'admin@luxurystay.com';
+      const adminPassword = 'Adminyt666@';
+      const existingAdmin = await User.findOne({ email: adminEmail });
+
+      if (!existingAdmin) {
+        const hashedPassword = await bcrypt.hash(adminPassword, 10);
+        await User.create({
+          name: 'Hotel Admin',
+          email: adminEmail,
+          password: hashedPassword,
+          role: 'admin',
+        });
+      } else {
+        existingAdmin.password = await bcrypt.hash(adminPassword, 10);
+        await existingAdmin.save();
+      }
+
+      console.log(`👑 Admin Account Ready: ${adminEmail} / ${adminPassword}`);
+    } catch (err) {
+      console.error('❌ Admin Seeder Error:', err.message);
+    }
+  })
   .catch((err) => console.error("❌ MongoDB Connection Error:", err.message));
 
 app.use('/api/users', userRoutes);

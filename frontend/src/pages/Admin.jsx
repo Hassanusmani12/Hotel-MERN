@@ -215,6 +215,43 @@ const Admin = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, [navigate]);
 
+    // Silent background refresh (no loading spinner)
+    const silentRefresh = async () => {
+        const ts = Date.now();
+        try {
+            const results = await Promise.allSettled([
+                axios.get(`${API_BASE_URL}/api/bookings?_=${ts}`),
+                axios.get(`${API_BASE_URL}/api/messages?_=${ts}`),
+                axios.get(`${API_BASE_URL}/api/rooms?_=${ts}`),
+                axios.get(`${API_BASE_URL}/api/amenities?_=${ts}`)
+            ]);
+            if (results[0].status === 'fulfilled') setBookings(results[0].value.data || []);
+            if (results[1].status === 'fulfilled') setMessages(results[1].value.data || []);
+            if (results[2].status === 'fulfilled') setRooms(results[2].value.data || []);
+            if (results[3].status === 'fulfilled') setAllAmenities(results[3].value.data || []);
+        } catch (_) {}
+    };
+
+    // Auto-refetch on focus / visibility change + polling
+    useEffect(() => {
+        const storedUser = JSON.parse(localStorage.getItem('user'));
+        if (!storedUser || storedUser.role !== 'admin') return;
+
+        const onFocus = () => silentRefresh();
+        const onVisible = () => { if (document.visibilityState === 'visible') silentRefresh(); };
+
+        window.addEventListener('focus', onFocus);
+        document.addEventListener('visibilitychange', onVisible);
+
+        const pollId = setInterval(silentRefresh, 10000);
+
+        return () => {
+            window.removeEventListener('focus', onFocus);
+            document.removeEventListener('visibilitychange', onVisible);
+            clearInterval(pollId);
+        };
+    }, []);
+
     // Load Gallery from Local Storage
     useEffect(() => {
         const savedGallery = JSON.parse(localStorage.getItem('site_gallery')) || [];
@@ -223,12 +260,13 @@ const Admin = () => {
 
     const fetchData = async () => {
         setLoading(true);
+        const ts = Date.now();
         try {
             const results = await Promise.allSettled([
-                axios.get(`${API_BASE_URL}/api/bookings`),
-                axios.get(`${API_BASE_URL}/api/messages`),
-                axios.get(`${API_BASE_URL}/api/rooms`),
-                axios.get(`${API_BASE_URL}/api/amenities`)
+                axios.get(`${API_BASE_URL}/api/bookings?_=${ts}`),
+                axios.get(`${API_BASE_URL}/api/messages?_=${ts}`),
+                axios.get(`${API_BASE_URL}/api/rooms?_=${ts}`),
+                axios.get(`${API_BASE_URL}/api/amenities?_=${ts}`)
             ]);
 
             if (results[0].status === 'fulfilled') setBookings(results[0].value.data || []);
@@ -279,6 +317,20 @@ const Admin = () => {
         } catch (err) { 
             console.error(err);
             toast.error("Delete operation failed."); 
+        }
+    };
+
+    const handleDeleteBooking = async (bookingId) => {
+        if (!window.confirm("Are you sure you want to permanently delete this booking?")) return;
+        try {
+            const token = user?.token || JSON.parse(localStorage.getItem('user') || '{}').token;
+            await axios.delete(`${API_BASE_URL}/api/bookings/${bookingId}`, {
+                headers: token ? { Authorization: `Bearer ${token}` } : {}
+            });
+            setBookings((prev) => prev.filter((item) => item._id !== bookingId));
+            toast.success("Booking deleted successfully");
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to delete booking");
         }
     };
 
@@ -597,10 +649,20 @@ const Admin = () => {
                                                     <div style={{ fontSize: '12px', opacity: 0.3 }}>{b?.user?.email || b?.user?.phone || ''}</div>
                                                 </td>
                                                 <td style={{ padding: '35px 30px' }}>{new Date(b?.createdAt || b?.date).toLocaleDateString()}</td>
-                                                <td style={{ padding: '35px 30px' }}>{new Date(b?.checkInDate).toLocaleDateString()} → {new Date(b?.checkOutDate).toLocaleDateString()}</td>
+                                                <td style={{ padding: '35px 30px' }}>
+                                                    {(() => {
+                                                        const fmt = (d) => {
+                                                            if (!d) return 'N/A';
+                                                            const p = String(d).split('T')[0];
+                                                            const [y, m, day] = p.split('-');
+                                                            return y ? `${parseInt(m)}/${parseInt(day)}/${y}` : d;
+                                                        };
+                                                        return `${fmt(b?.checkInDate)} → ${fmt(b?.checkOutDate)}`;
+                                                    })()}
+                                                </td>
                                                 <td style={{ padding: '35px 30px' }}><PaymentBadge booking={b} /></td>
                                                 <td style={{ padding: '35px 30px' }}><StatusBadge status={b.status} /></td>
-                                                <td style={{ padding: '35px 30px', textAlign: 'center' }}><button onClick={() => handleDelete('booking', b._id)} style={{ color: '#ff4d4d', background: 'none', border: 'none', cursor: 'pointer' }}><FaTrash/></button></td>
+                                                <td style={{ padding: '35px 30px', textAlign: 'center' }}><button onClick={() => handleDeleteBooking(b._id)} style={{ color: '#ff4d4d', background: 'none', border: 'none', cursor: 'pointer' }}><FaTrash/></button></td>
                                             </motion.tr>
                                         ))}
                                     </tbody>

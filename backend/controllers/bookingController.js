@@ -1,6 +1,13 @@
 const Booking = require('../models/Booking');
 const Room = require('../models/Room');
 
+// Helper to set no-cache headers
+const setNoCache = (res) => {
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+};
+
 // --- 1. Get ALL Bookings (Admin VVIP View) ---
 const getAllBookings = async (req, res) => {
     try {
@@ -9,6 +16,7 @@ const getAllBookings = async (req, res) => {
             .populate('room', 'type roomNumber price') 
             .sort({ createdAt: -1 });
 
+        setNoCache(res);
         res.status(200).json(bookings);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -51,6 +59,7 @@ const createBooking = async (req, res) => {
             totalPrice: resolvedTotal
         });
 
+        setNoCache(res);
         res.status(201).json({ message: "Room Booked Successfully!", booking });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -65,21 +74,48 @@ const getUserBookings = async (req, res) => {
             .populate('room') 
             .sort({ createdAt: -1 });
 
+        setNoCache(res);
         res.status(200).json(bookings);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// --- 4. Cancel Booking ---
+// --- 4. Cancel Booking (Soft cancel with 24-hour window) ---
 const cancelBooking = async (req, res) => {
     try {
-        await Booking.findByIdAndDelete(req.params.id);
+        const booking = await Booking.findById(req.params.id);
+        if (!booking) {
+            return res.status(404).json({ message: "Booking not found" });
+        }
+
+        const hoursDiff = (Date.now() - new Date(booking.createdAt).getTime()) / (1000 * 60 * 60);
+        if (hoursDiff > 24) {
+            return res.status(400).json({ message: "Cancellation period has expired. Bookings can only be cancelled within 24 hours." });
+        }
+
+        booking.status = 'Cancelled';
+        await booking.save();
+        setNoCache(res);
         res.status(200).json({ message: "Booking Cancelled Successfully" });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// ✅ Sahi Export Name:
-module.exports = { getAllBookings, createBooking, getUserBookings, cancelBooking };
+// --- 5. Delete Booking (Admin only — permanent hard delete) ---
+const deleteBooking = async (req, res) => {
+    try {
+        const booking = await Booking.findById(req.params.id);
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found' });
+        }
+        await Booking.findByIdAndDelete(req.params.id);
+        setNoCache(res);
+        res.json({ message: 'Booking permanently deleted from database' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { getAllBookings, createBooking, getUserBookings, cancelBooking, deleteBooking };

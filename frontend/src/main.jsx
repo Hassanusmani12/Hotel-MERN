@@ -6,11 +6,12 @@ import App from './App.jsx'
 import { ThemeProvider } from './context/ThemeContext.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
 
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "392793672264-q4oahkhd116v75egselkbskkohsrfeft.apps.googleusercontent.com";
+console.log("Current Google Client ID:", GOOGLE_CLIENT_ID);
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <GoogleOAuthProvider clientId={googleClientId}>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <AuthProvider>
         <ThemeProvider>
           <App />
